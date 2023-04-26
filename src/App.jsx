@@ -1,5 +1,5 @@
-import './App.css'
 import { useState } from 'react'
+import './App.css'
 
 function Square({ value, onSquareClick }) {
   return (
@@ -12,7 +12,7 @@ function Square({ value, onSquareClick }) {
 function Board({xIsNext, squares, onPlay}) {
 
   function handleClick(i) {
-    if(squares[i] || calculateWinner(squares)) {
+    if(calculateWinner(squares) || squares[i]) {
       return;
     }
     const nextSquares = squares.slice();
@@ -25,8 +25,8 @@ function Board({xIsNext, squares, onPlay}) {
   }
 
   const winner = calculateWinner(squares);
-  let status;
-  if(winner) {
+  let status
+  if (winner) {
     status = `Winner: ${winner}`;
   } else {
     status = `Next player: ${(xIsNext ? 'X' : '0')}`
@@ -57,31 +57,34 @@ function Board({xIsNext, squares, onPlay}) {
 }
 
 export default function Game() {
-  const [xIsNext, setXisNext] = useState(true)
+  const [xIsNext, setXIsNext] = useState(true)
   const [history, setHistory] = useState([Array(9).fill(null)])
-  const currentSquares = history[history.length - 1]
+  const [currentMove, setCurrentMove] = useState(0)
+  const currentSquares = history[currentMove]
 
 
   function handlePlay(nextSquares) {
-    setHistory([...history, nextSquares])
-    setXisNext(!xIsNext)
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares]
+    setHistory(nextHistory)
+    setCurrentMove(nextHistory.length - 1)
+    setXIsNext(!xIsNext)
   }
 
   function jumpTo(nextMove) {
-
+    setCurrentMove(nextMove)
+    setXIsNext(nextMove % 2 === 0)
   }
 
   const moves = history.map((squares, move) => {
-    let description 
+    let description
     if (move > 0) {
       description = `Go to move # ${move}`
     } else {
       description = `Go to game start`
     }
-
     return (
-      <li>
-        <button className='move-list' onClick={() => jumpTo(move)}>{description}</button>
+      <li key={move}>
+        <button onClick={() => jumpTo(move)} className='move-list'>{description}</button>
       </li>
     )
   })
@@ -92,7 +95,9 @@ export default function Game() {
         <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
       </div>
       <h3>Move History</h3>
-      <div className='moves'>{moves}</div>
+      <div className="game-info">
+        <div className='moves'>{moves}</div>
+      </div>
     </div> 
   )
 }
